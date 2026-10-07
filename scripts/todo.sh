@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
-# Lists TODO/FIXME markers left in the module so they don't get lost before a release.
+
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+IFS=$'\n\t'
 
-root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$root_dir"
+GIT_ROOT=$(git rev-parse --show-toplevel)
+pushd "$GIT_ROOT" >/dev/null || exit 1
 
-grep -rn --include='*.tf' --include='*.md' -E 'TODO|FIXME' . || echo "No TODO/FIXME markers found."
+todo_check() {
+  grep \
+    -I \
+    -r 'TODO' \
+    --exclude todo.sh \
+    --exclude todo.yml \
+    --exclude-dir .git \
+    .
+}
+
+if todo_check; then
+  echo 'Please address TODOs before merging into main.'
+  exit 1
+fi

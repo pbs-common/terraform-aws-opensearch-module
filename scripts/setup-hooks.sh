@@ -1,18 +1,37 @@
 #!/usr/bin/env bash
-# Installs a pre-commit hook that runs validate.sh, format.sh, then document.sh, in that order.
-set -euo pipefail
 
-root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-hook_path="${root_dir}/.git/hooks/pre-commit"
-
-cat > "$hook_path" <<'EOF'
-#!/usr/bin/env bash
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-root_dir="$(git rev-parse --show-toplevel)"
-"$root_dir/scripts/validate.sh"
-"$root_dir/scripts/format.sh"
-"$root_dir/scripts/document.sh"
+IFS=$'\n\t'
+
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+create_general_hooks() {
+    cat <<'EOF' >>"$GIT_ROOT"/.git/hooks/pre-commit
+# terraform-aws-template-hooks
+GIT_ROOT=$(git rev-parse --show-toplevel)
+"$GIT_ROOT"/scripts/validate.sh
+"$GIT_ROOT"/scripts/format.sh
 EOF
 
-chmod +x "$hook_path"
-echo "Installed pre-commit hook at ${hook_path}"
+}
+
+add_non_template_hook() {
+    echo '"$GIT_ROOT"/scripts/document.sh' >>"$GIT_ROOT"/.git/hooks/pre-commit
+}
+
+get_mod_name() {
+    git remote -v | grep origin | grep fetch | awk '{printf $2}' | sd '.*/terraform-aws-([^\.]+)\.git' '$1'
+}
+
+if grep -q '# terraform-aws-template-hooks' "$GIT_ROOT"/.git/hooks/pre-commit; then
+    echo "You already have hooks set up in $GIT_ROOT/.git/hooks/pre-commit"
+    exit 1
+else
+    create_general_hooks
+    if [[ "$(get_mod_name)" != 'template' ]]; then
+        add_non_template_hook
+    fi
+fi
+
+echo "Hooks installed"

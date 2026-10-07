@@ -1,11 +1,9 @@
-.terraform/
-.terraform.lock.hcl
+.terraform
+.DS_Store
+target
+CHANGELOG.md
 *.tfstate
-*.tfstate.*
-crash.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-.terraformrc
-terraform.rc
+*.tfstate.backup
+
+# Local-only reference clones used to study other PBS repos; never part of this module.
+aaaa/

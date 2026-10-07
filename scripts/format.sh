@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Formats every .tf file in the root module and its examples. Safe to run anytime; it never
-# touches state or talks to AWS.
+
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+IFS=$'\n\t'
 
-root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$root_dir"
-
-terraform fmt -recursive .
+GIT_ROOT=$(git rev-parse --show-toplevel)
+pushd "$GIT_ROOT" >/dev/null || exit 1
+export AWS_DEFAULT_REGION='us-east-1'
+terraform fmt -recursive

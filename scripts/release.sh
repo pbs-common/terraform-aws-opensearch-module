@@ -1,45 +1,84 @@
 #!/usr/bin/env bash
-# Tags and publishes a new release. Bump is "major", "minor" or "patch" (default: patch) --
-# see README.md's contribution notes for when each applies. Requires a clean tree and the gh CLI.
+
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+IFS=$'\n\t'
 
-root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$root_dir"
+: "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set. e.g. owner/repo}"
+: "${GITHUB_USERNAME:?GITHUB_USERNAME must be set. e.g. owner}"
 
-bump="${1:-patch}"
-case "$bump" in
-  major|minor|patch) ;;
-  *) echo "usage: $0 [major|minor|patch]" >&2; exit 1 ;;
-esac
+GIT_ROOT=$(git rev-parse --show-toplevel)
 
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "working tree is not clean; commit or stash before releasing" >&2
-  exit 1
+pushd "$GIT_ROOT" >/dev/null
+
+if ! LATEST_GIT_TAG="$(gh api -X GET "repos/$GITHUB_REPOSITORY/tags" -f 'per_page=1' --jq '.[0].name')"; then
+  LATEST_GIT_TAG="0.0.0"
 fi
 
-latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
-latest_tag="${latest_tag:-v0.0.0}"
-IFS='.' read -r major minor patch <<< "${latest_tag#v}"
-
-case "$bump" in
-  major) major=$((major + 1)); minor=0; patch=0 ;;
-  minor) minor=$((minor + 1)); patch=0 ;;
-  patch) patch=$((patch + 1)) ;;
-esac
-
-new_version="${major}.${minor}.${patch}"
-new_tag="v${new_version}"
-
-sed -i.bak -E "s/ref=x\.y\.z/ref=${new_version}/g; s/\`x\.y\.z\`/\`${new_version}\`/g" README.md README-HEADER.md
-rm -f README.md.bak README-HEADER.md.bak
-
-git add README.md README-HEADER.md
-git commit -m "Release ${new_tag}"
-git tag -a "$new_tag" -m "${new_tag}"
-git push origin HEAD "$new_tag"
-
-if command -v gh >/dev/null; then
-  gh release create "$new_tag" --generate-notes
+if [[ "$LATEST_GIT_TAG" == '0.0.0' ]] || ! [[ "$LATEST_GIT_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  NEW_GIT_TAG='0.0.1'
 else
-  echo "gh CLI not found; tag ${new_tag} pushed but no GitHub release was created" >&2
+  IFS=. read -r major minor patch <<EOF
+$LATEST_GIT_TAG
+EOF
+
+  RELEASE_TYPE='patch'
+
+  echo 'Generating release notes to see what kind of release we are dealing with...'
+  gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+    -f tag_name="new-release" \
+    -f previous_tag_name="${LATEST_GIT_TAG}" \
+    -q .body >CHANGELOG.md
+
+  cat CHANGELOG.md
+
+  if grep -q 'Breaking Changes' CHANGELOG.md; then
+    RELEASE_TYPE='major'
+  elif grep -q 'New Features' CHANGELOG.md; then
+    RELEASE_TYPE='minor'
+  fi
+
+  NEW_GIT_TAG=''
+
+  case "$RELEASE_TYPE" in
+  major) NEW_GIT_TAG="$((major + 1)).0.0" ;;
+  minor) NEW_GIT_TAG="$major.$((minor + 1)).0" ;;
+  patch) NEW_GIT_TAG="$major.$minor.$((patch + 1))" ;;
+  *) NEW_GIT_TAG="$RELEASE_TYPE" ;;
+  esac
 fi
+
+echo "Updating README using new tag: $NEW_GIT_TAG"
+
+if command -v sd >/dev/null; then
+  # This is only really necessary for the template
+  if ! grep -q 'x.y.z' README.md; then
+    sd "$LATEST_GIT_TAG" 'x.y.z' README.md
+  fi
+  sd 'x.y.z' "$NEW_GIT_TAG" README.md
+else
+  tmp="$(mktemp)"
+  # This is only really necessary for the template
+  if ! grep -q 'x.y.z' README.md; then
+    sed "s/$LATEST_GIT_TAG/x.y.z/g" README.md >"$tmp"
+    mv "$tmp" README.md
+  fi
+  sed "s/x.y.z/$NEW_GIT_TAG/g" README.md >"$tmp"
+  mv "$tmp" README.md
+fi
+
+git add README.md
+git config user.name "${GITHUB_USERNAME}"
+git config user.email "${GITHUB_USERNAME}@users.noreply.github.com"
+git commit -m "Update README for new release: $NEW_GIT_TAG"
+git push origin main
+git tag "$NEW_GIT_TAG"
+git push origin "$NEW_GIT_TAG"
+
+./scripts/minify.sh
+
+mkdir -p target
+rm -f target/release.tar.gz
+tar --exclude target --exclude .git -cvf target/release.tar.gz .
+gh release create --generate-notes "$NEW_GIT_TAG" target/release.tar.gz
+git reset --hard

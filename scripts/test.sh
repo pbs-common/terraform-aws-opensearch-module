@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Runs the Terratest suite under tests/. These tests create and destroy real AWS resources;
-# export AWS credentials with permission to manage OpenSearch domains before running this.
+
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+IFS=$'\n\t'
 
-root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$root_dir/tests"
-
-go test -timeout 60m -v ./...
+GIT_ROOT=$(git rev-parse --show-toplevel)
+pushd "$GIT_ROOT"/tests >/dev/null || exit 1
+go test -timeout 30m -count=1 -parallel 10 ./...

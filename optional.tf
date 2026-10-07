@@ -6,6 +6,7 @@ variable "name" {
 
 # --- Cluster config --------------------------------------------------------------------------
 
+
 variable "engine_version" {
   description = "(optional) Engine version, e.g. OpenSearch_2.19 or Elasticsearch_7.10"
   default     = "OpenSearch_2.19"

@@ -112,6 +112,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment (sharedtools, dev, staging, qa, prod) | `string` | n/a | yes |
+| <a name="input_organization"></a> [organization](#input\_organization) | Organization using this module. Used to prefix tags so that they are easily identified as being from your organization | `string` | n/a | yes |
+| <a name="input_owner"></a> [owner](#input\_owner) | Tag used to group resources according to product | `string` | n/a | yes |
+| <a name="input_product"></a> [product](#input\_product) | Tag used to group resources according to product | `string` | n/a | yes |
+| <a name="input_repo"></a> [repo](#input\_repo) | Tag used to point to the repo using this module | `string` | n/a | yes |
 | <a name="input_access_policies"></a> [access\_policies](#input\_access\_policies) | (optional) Raw JSON access policy document for the domain. Leave null to manage access purely through the security group (VPC domains) or through IAM request signing (public domains). | `string` | `null` | no |
 | <a name="input_advanced_security_options_enabled"></a> [advanced\_security\_options\_enabled](#input\_advanced\_security\_options\_enabled) | (optional) Whether to enable fine-grained access control. Requires encrypt\_at\_rest\_enabled, node\_to\_node\_encryption\_enabled and enforce\_https to all be true. | `bool` | `false` | no |
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | (optional) ARNs (e.g. SNS topics) notified when an alarm created by create\_cloudwatch\_alarms transitions into ALARM | `list(string)` | `[]` | no |
@@ -136,7 +141,6 @@ No modules.
 | <a name="input_encrypt_at_rest_enabled"></a> [encrypt\_at\_rest\_enabled](#input\_encrypt\_at\_rest\_enabled) | (optional) Whether to encrypt data at rest | `bool` | `true` | no |
 | <a name="input_enforce_https"></a> [enforce\_https](#input\_enforce\_https) | (optional) Whether to require HTTPS for all traffic to the domain endpoint | `bool` | `true` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | (optional) Engine version, e.g. OpenSearch\_2.19 or Elasticsearch\_7.10 | `string` | `"OpenSearch_2.19"` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Environment (sharedtools, dev, staging, qa, prod) | `string` | n/a | yes |
 | <a name="input_ingress_rules"></a> [ingress\_rules](#input\_ingress\_rules) | (optional) Ingress rules added to the security group this module creates. Each rule allows either cidr\_blocks or security\_group\_ids (or both). | <pre>list(object({<br/>    description        = optional(string)<br/>    from_port          = optional(number, 443)<br/>    to_port            = optional(number, 443)<br/>    protocol           = optional(string, "tcp")<br/>    cidr_blocks        = optional(list(string), [])<br/>    security_group_ids = optional(list(string), [])<br/>  }))</pre> | `[]` | no |
 | <a name="input_instance_count"></a> [instance\_count](#input\_instance\_count) | (optional) Number of data nodes | `number` | `1` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | (optional) Instance type for data nodes | `string` | `"t3.small.search"` | no |
@@ -154,10 +158,6 @@ No modules.
 | <a name="input_off_peak_window_start_hour"></a> [off\_peak\_window\_start\_hour](#input\_off\_peak\_window\_start\_hour) | (optional) UTC hour the off-peak maintenance window starts | `number` | `2` | no |
 | <a name="input_off_peak_window_start_minute"></a> [off\_peak\_window\_start\_minute](#input\_off\_peak\_window\_start\_minute) | (optional) Minute of the hour the off-peak maintenance window starts | `number` | `0` | no |
 | <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | (optional) ARNs (e.g. SNS topics) notified when an alarm created by create\_cloudwatch\_alarms transitions back to OK | `list(string)` | `[]` | no |
-| <a name="input_organization"></a> [organization](#input\_organization) | Organization using this module. Used to prefix tags so that they are easily identified as being from your organization | `string` | n/a | yes |
-| <a name="input_owner"></a> [owner](#input\_owner) | Tag used to group resources according to product | `string` | n/a | yes |
-| <a name="input_product"></a> [product](#input\_product) | Tag used to group resources according to product | `string` | n/a | yes |
-| <a name="input_repo"></a> [repo](#input\_repo) | Tag used to point to the repo using this module | `string` | n/a | yes |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (optional) Extra security group ids to attach to the domain, in addition to the one this module creates. Required if create\_security\_group is false and subnet\_ids is set. | `list(string)` | `[]` | no |
 | <a name="input_software_update_auto_update_enabled"></a> [software\_update\_auto\_update\_enabled](#input\_software\_update\_auto\_update\_enabled) | (optional) Whether to automatically apply service software updates during the off-peak window | `bool` | `true` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (optional) Subnet ids to place the domain in. One subnet per availability zone used; leave empty to create a public (non-VPC) domain | `list(string)` | `[]` | no |

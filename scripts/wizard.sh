@@ -1,36 +1,32 @@
 #!/usr/bin/env bash
-# Interactively prints a minimal module call, prompting only for the handful of inputs most
-# callers need to change (tagging parameters plus networking). Pipe the output into a new .tf
-# file and adjust from there -- this does not write any files itself.
+
+# Unofficial bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+IFS=$'\n\t'
 
-read -rp "product: " product
-read -rp "owner: " owner
-read -rp "environment [sharedtools/dev/staging/qa/prod]: " environment
-read -rp "organization: " organization
-read -rp "repo (git URL): " repo
-read -rp "Place the domain in a VPC? [y/N]: " use_vpc
+GIT_ROOT=$(git rev-parse --show-toplevel)
 
-cat <<EOF
+MOD_NAME="$(git remote -v | grep origin | awk '{printf $2}' | sed -nr 's~.*/terraform-aws-([^\.]+)\.git~\1~p')"
+MOD_SHORTNAME="$(echo "$MOD_NAME" | sed -nr 's~(.*)-module~\1~p' | tr -d '[:space:]')"
+MOD_TITLE="${MOD_NAME//-/ }"
 
-module "opensearch" {
-  source = "github.com/pbs/terraform-aws-opensearch-module?ref=x.y.z"
+declare -A REPLACEMENT_KEYS=(
+    ["MOD_NAME"]="$MOD_NAME"
+    ["MOD_TITLE"]="$MOD_TITLE"
+    ["MOD_SHORTNAME"]="$MOD_SHORTNAME"
+)
 
-  # Tagging Parameters
-  organization = "${organization}"
-  environment  = "${environment}"
-  product      = "${product}"
-  owner        = "${owner}"
-  repo         = "${repo}"
-EOF
+pushd "$GIT_ROOT" >/dev/null
+BOILERPLATE_FILES=$(fd -tf -E wizard.sh -c never .)
 
-if [[ "${use_vpc,,}" == "y" ]]; then
-  cat <<'EOF'
-
-  # Optional Parameters
-  vpc_id     = "vpc-xxxxxxxxxxxxxxxxx"
-  subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx"]
-EOF
-fi
-
-echo "}"
+for BOILERPLATE_FILE in $BOILERPLATE_FILES; do
+    for REPLACEMENT_KEY in "${!REPLACEMENT_KEYS[@]}"; do
+        if command -v sd >/dev/null; then
+            sd "$REPLACEMENT_KEY" "${REPLACEMENT_KEYS[$REPLACEMENT_KEY]}" "$BOILERPLATE_FILE"
+        else
+            tmp="$(mktemp)"
+            sed "s/$REPLACEMENT_KEY/${REPLACEMENT_KEYS[$REPLACEMENT_KEY]}/g" "$BOILERPLATE_FILE" >"$tmp"
+            mv "$tmp" "$BOILERPLATE_FILE"
+        fi
+    done
+done

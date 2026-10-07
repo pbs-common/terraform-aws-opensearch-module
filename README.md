@@ -5,7 +5,7 @@
 ### Using the Repo Source
 
 ```hcl
-github.com/pbs/terraform-aws-opensearch-module?ref=x.y.z
+github.com/pbs/terraform-aws-opensearch-module?ref=0.0.1
 ```
 
 ### Alternative Installation Methods
@@ -31,7 +31,7 @@ Integrate this module like so:
 
 ```hcl
 module "opensearch" {
-  source = "github.com/pbs/terraform-aws-opensearch-module?ref=x.y.z"
+  source = "github.com/pbs/terraform-aws-opensearch-module?ref=0.0.1"
 
   # Tagging Parameters
   organization = var.organization
@@ -60,7 +60,7 @@ module "opensearch" {
 
 If this repo is added as a subtree, then the version of the module should be close to the version shown here:
 
-`x.y.z`
+`0.0.1`
 
 Note, however that subtrees can be altered as desired within repositories.
 

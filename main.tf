@@ -31,8 +31,8 @@ resource "aws_cloudwatch_log_resource_policy" "this" {
 resource "aws_security_group" "this" {
   count = local.create_security_group ? 1 : 0
 
-  name        = "${local.name}-opensearch"
-  description = "Access to the ${local.name} OpenSearch domain"
+  name        = local.security_group_name
+  description = local.security_group_description
   vpc_id      = var.vpc_id
 
   dynamic "ingress" {
@@ -47,11 +47,19 @@ resource "aws_security_group" "this" {
     }
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = var.egress_cidr_blocks
+  # Gated rather than static so that `egress_cidr_blocks = []` leaves egress entirely undeclared.
+  # `egress` is optional+computed: a block that is present -- even an empty one -- makes this
+  # resource authoritative over the group's whole egress rule set and revokes anything it does not
+  # list, including rules managed by separate aws_vpc_security_group_egress_rule resources. A
+  # dynamic block with no iterations is absent, which leaves those rules alone.
+  dynamic "egress" {
+    for_each = length(var.egress_cidr_blocks) > 0 ? [1] : []
+    content {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = var.egress_cidr_blocks
+    }
   }
 
   tags = local.tags

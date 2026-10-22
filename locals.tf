@@ -29,6 +29,9 @@ locals {
   }
 
   create_security_group = length(var.subnet_ids) > 0 && var.create_security_group
+
+  security_group_name        = var.security_group_name != null ? var.security_group_name : "${local.name}-opensearch"
+  security_group_description = var.security_group_description != null ? var.security_group_description : "Access to the ${local.name} OpenSearch domain"
   domain_security_group_ids = compact(concat(
     local.create_security_group ? [aws_security_group.this[0].id] : [],
     var.security_group_ids

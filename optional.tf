@@ -46,8 +46,10 @@ variable "dedicated_master_count" {
   default     = 3
   type        = number
   validation {
-    condition     = contains([3, 5], var.dedicated_master_count)
-    error_message = "The dedicated_master_count variable must be 3 or 5."
+    # Only meaningful when masters are enabled; the value is not sent otherwise. Gating the check
+    # lets a caller pass its own variable through unconditionally.
+    condition     = !var.dedicated_master_enabled || contains([3, 5], var.dedicated_master_count)
+    error_message = "The dedicated_master_count variable must be 3 or 5 when dedicated_master_enabled is true."
   }
 }
 
@@ -157,6 +159,18 @@ variable "create_security_group" {
   type        = bool
 }
 
+variable "security_group_name" {
+  description = "(optional) Name of the security group this module creates. If null, `<name>-opensearch` is used. Note that the name is immutable: changing it on an existing group replaces the group, and with it every rule attached to the group."
+  default     = null
+  type        = string
+}
+
+variable "security_group_description" {
+  description = "(optional) Description of the security group this module creates. If null, one is generated from the domain name. Note that the description is immutable in the same way the name is -- set it to the live value when adopting an existing group."
+  default     = null
+  type        = string
+}
+
 variable "security_group_ids" {
   description = "(optional) Extra security group ids to attach to the domain, in addition to the one this module creates. Required if create_security_group is false and subnet_ids is set."
   default     = []
@@ -177,7 +191,7 @@ variable "ingress_rules" {
 }
 
 variable "egress_cidr_blocks" {
-  description = "(optional) CIDR blocks allowed on all outbound traffic from the security group this module creates"
+  description = "(optional) CIDR blocks allowed on all outbound traffic from the security group this module creates. Set to [] to declare no egress block at all, which leaves the group's egress rules to be managed elsewhere rather than revoking them."
   default     = ["0.0.0.0/0"]
   type        = list(string)
 }

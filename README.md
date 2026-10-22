@@ -5,7 +5,7 @@
 ### Using the Repo Source
 
 ```hcl
-github.com/pbs/terraform-aws-opensearch-module?ref=0.0.1
+github.com/pbs/terraform-aws-opensearch-module?ref=x.y.z
 ```
 
 ### Alternative Installation Methods
@@ -31,7 +31,7 @@ Integrate this module like so:
 
 ```hcl
 module "opensearch" {
-  source = "github.com/pbs/terraform-aws-opensearch-module?ref=0.0.1"
+  source = "github.com/pbs/terraform-aws-opensearch-module?ref=x.y.z"
 
   # Tagging Parameters
   organization = var.organization
@@ -60,7 +60,7 @@ module "opensearch" {
 
 If this repo is added as a subtree, then the version of the module should be close to the version shown here:
 
-`0.0.1`
+`x.y.z`
 
 Note, however that subtrees can be altered as desired within repositories.
 
@@ -137,7 +137,7 @@ No modules.
 | <a name="input_dedicated_master_enabled"></a> [dedicated\_master\_enabled](#input\_dedicated\_master\_enabled) | (optional) Whether to use dedicated master nodes | `bool` | `false` | no |
 | <a name="input_dedicated_master_type"></a> [dedicated\_master\_type](#input\_dedicated\_master\_type) | (optional) Instance type for dedicated master nodes (only used when dedicated\_master\_enabled is true) | `string` | `"t3.small.search"` | no |
 | <a name="input_ebs_enabled"></a> [ebs\_enabled](#input\_ebs\_enabled) | (optional) Whether data nodes use EBS storage instead of instance store | `bool` | `true` | no |
-| <a name="input_egress_cidr_blocks"></a> [egress\_cidr\_blocks](#input\_egress\_cidr\_blocks) | (optional) CIDR blocks allowed on all outbound traffic from the security group this module creates | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
+| <a name="input_egress_cidr_blocks"></a> [egress\_cidr\_blocks](#input\_egress\_cidr\_blocks) | (optional) CIDR blocks allowed on all outbound traffic from the security group this module creates. Set to [] to declare no egress block at all, which leaves the group's egress rules to be managed elsewhere rather than revoking them. | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
 | <a name="input_encrypt_at_rest_enabled"></a> [encrypt\_at\_rest\_enabled](#input\_encrypt\_at\_rest\_enabled) | (optional) Whether to encrypt data at rest | `bool` | `true` | no |
 | <a name="input_enforce_https"></a> [enforce\_https](#input\_enforce\_https) | (optional) Whether to require HTTPS for all traffic to the domain endpoint | `bool` | `true` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | (optional) Engine version, e.g. OpenSearch\_2.19 or Elasticsearch\_7.10 | `string` | `"OpenSearch_2.19"` | no |
@@ -158,7 +158,9 @@ No modules.
 | <a name="input_off_peak_window_start_hour"></a> [off\_peak\_window\_start\_hour](#input\_off\_peak\_window\_start\_hour) | (optional) UTC hour the off-peak maintenance window starts | `number` | `2` | no |
 | <a name="input_off_peak_window_start_minute"></a> [off\_peak\_window\_start\_minute](#input\_off\_peak\_window\_start\_minute) | (optional) Minute of the hour the off-peak maintenance window starts | `number` | `0` | no |
 | <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | (optional) ARNs (e.g. SNS topics) notified when an alarm created by create\_cloudwatch\_alarms transitions back to OK | `list(string)` | `[]` | no |
+| <a name="input_security_group_description"></a> [security\_group\_description](#input\_security\_group\_description) | (optional) Description of the security group this module creates. If null, one is generated from the domain name. Note that the description is immutable in the same way the name is -- set it to the live value when adopting an existing group. | `string` | `null` | no |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (optional) Extra security group ids to attach to the domain, in addition to the one this module creates. Required if create\_security\_group is false and subnet\_ids is set. | `list(string)` | `[]` | no |
+| <a name="input_security_group_name"></a> [security\_group\_name](#input\_security\_group\_name) | (optional) Name of the security group this module creates. If null, `<name>-opensearch` is used. Note that the name is immutable: changing it on an existing group replaces the group, and with it every rule attached to the group. | `string` | `null` | no |
 | <a name="input_software_update_auto_update_enabled"></a> [software\_update\_auto\_update\_enabled](#input\_software\_update\_auto\_update\_enabled) | (optional) Whether to automatically apply service software updates during the off-peak window | `bool` | `true` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (optional) Subnet ids to place the domain in. One subnet per availability zone used; leave empty to create a public (non-VPC) domain | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Extra tags | `map(string)` | `{}` | no |
